@@ -9,97 +9,110 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class NumberUtilsTest {
-    /**
-     * Step 1: understand the requirement, input type and output type
-     * Requirement: Add two list of integer, index by index, and returns another list
-     * <p>
-     * Step 2 (raw):  Perform partition and boundary analysis on input and output
-     * Each input: left | right
-     * Combination of input:
-     * Output:
-     * Step 3: Derive potential test cases
-     */
-    @Test /** Testing basic addition, 8 + 9 = 17*/
+
+    @Test /** Basic addition: 8 + 9 = 17 */
     public void testBaseAddition() {
         List<Integer> left = Arrays.asList(8);
         List<Integer> right = Arrays.asList(9);
-        List<Integer> expectedOutput = Arrays.asList(1,7);
-        List<Integer> actualOutput = NumberUtils.add(left, right);
-        assert expectedOutput.equals(actualOutput);
+        List<Integer> expectedOutput = Arrays.asList(1, 7);
+        assertEquals(expectedOutput, NumberUtils.add(left, right));
+    }
 
+    @Test /** Null input: null + any number = null */
+    public void testNullAddition() {
+        assertNull(NumberUtils.add(null, Arrays.asList(9)));
+        assertNull(NumberUtils.add(Arrays.asList(9), null));
+        assertNull(NumberUtils.add(null, null));
     }
-    @Test/** Testing null input, null + null = null*/
-    public void testNullAdditionLeft() {
-        List<Integer> left = null;
-        List<Integer> right = Arrays.asList(9);
-        List<Integer> expectedOutput = null;
-        List<Integer> actualOutput = NumberUtils.add(left, right);
-        assertNull(actualOutput);
-    }
-    @Test /** testing empty input, [ ], or 0 +4 = 4*/
+
+    @Test /** Empty input: [] + 4 = [4] */
     public void testEmptyList() {
-        List<Integer> left = Arrays.asList();
-        List<Integer> right = Arrays.asList(4);
-        List<Integer> expectedOutput = Arrays.asList(4);
-        List<Integer> actualOutput = NumberUtils.add(left, right);
-        assert expectedOutput.equals(actualOutput);
+        assertEquals(Arrays.asList(4), NumberUtils.add(Arrays.asList(), Arrays.asList(4)));
     }
-    @Test /** Testing addition that requires a carry, 96 + 4 = 100*/
+
+    @Test /** Carry-over scenario: 96 + 4 = 100 */
     public void testCarryAddition() {
-        List<Integer> left = Arrays.asList(9,6);
+        List<Integer> left = Arrays.asList(9, 6);
         List<Integer> right = Arrays.asList(4);
-        List<Integer> expectedOutput = Arrays.asList(1,0,0);
-        List<Integer> actualOutput = NumberUtils.add(left, right);
-        assert expectedOutput.equals(actualOutput);
+        List<Integer> expectedOutput = Arrays.asList(1, 0, 0);
+        assertEquals(expectedOutput, NumberUtils.add(left, right));
     }
-    @Test /** Testing negative input, -2 + 45 = Error*/
+
+    @Test /** Invalid input: negative number */
     public void testInvalidNegativeDigit() {
-        List<Integer> left = Arrays.asList(-2);
-        List<Integer> right = Arrays.asList(4, 5);
-        assertThrows(IllegalArgumentException.class, () -> NumberUtils.add(left, right));
-    }
-    @Test/** Testing out of range input x>0-9, 100 + 9 = Error*/
-    public void testInvalidInputLarge(){
-        List<Integer> left = Arrays.asList(100);
-        List<Integer> right = Arrays.asList(9);
-        List<Integer> expectedOutput = null;
-        assertThrows(IllegalArgumentException.class, () -> NumberUtils.add(left, right));
+        assertThrows(IllegalArgumentException.class, () -> NumberUtils.add(Arrays.asList(-2), Arrays.asList(4, 5)));
     }
 
-    @Test/** Covers Leading Zero Removal**/
-    @Tag("Coverage")
+    @Test /** Invalid input: digit > 9 */
+    public void testInvalidInputLarge() {
+        assertThrows(IllegalArgumentException.class, () -> NumberUtils.add(Arrays.asList(100), Arrays.asList(9)));
+    }
+
+    @Test /** Leading zero removal */
     public void testRemoveLeadingZeros() {
-        List<Integer> left = Arrays.asList(0,0,1,2,4);
-        List<Integer> right = Arrays.asList(0,0,1,2,4);
-        List<Integer> expectedOutput= Arrays.asList(2,4,8);
+        List<Integer> left = Arrays.asList(0, 0, 1, 2, 4);
+        List<Integer> right = Arrays.asList(0, 0, 1, 2, 4);
+        List<Integer> expectedOutput = Arrays.asList(2, 4, 8);
+        assertEquals(expectedOutput, NumberUtils.add(left, right));
+    }
+
+    @Test
+    void testBothListsEmpty() {
+        List<Integer> left = Arrays.asList();
+        List<Integer> right = Arrays.asList();
+        List<Integer> expectedOutput = Arrays.asList();
+        assertEquals(expectedOutput, NumberUtils.add(left, right));
+    }
+
+    @Test
+    @Tag("Mutations")
+    void testFinalCarry() {
+        List<Integer> left = Arrays.asList(9, 9, 9);
+        List<Integer> right = Arrays.asList(1);
         List<Integer> result = NumberUtils.add(left, right);
-        assertEquals(expectedOutput,result);
 
+        assertEquals(4, result.size(), "Carry should extend the size of the result.");
+        assertEquals(1, result.get(0), "Leading carry should be 1.");
     }
-    @Test/** Covers Right side null input **/
-    @Tag("Coverage")
-    public void testNullAdditionRight() {
-        List<Integer> left = Arrays.asList(9);
-        List<Integer> right = null;
-        List<Integer> expectedOutput = null;
+
+
+    @Test
+    @Tag("Mutations")
+    void testLoopBoundary() {
+        List<Integer> left = Arrays.asList(1);
+        List<Integer> right = Arrays.asList(9, 9, 9);
         List<Integer> result = NumberUtils.add(left, right);
-        assertEquals(expectedOutput,result);
+
+        assertEquals(4, result.size(), "Loop boundary should process all digits correctly.");
+        assertEquals(Arrays.asList(1, 0, 0, 0), result, "Expected carry should propagate correctly.");
     }
 
-    @Test/** Covers Negative Right side **/
-    @Tag("Coverage")
-    public void testRightOutOfBoundsNegative() {
-        List<Integer> left = Arrays.asList(9,6);
-        List<Integer> right = Arrays.asList(-4);
-        assertThrows(IllegalArgumentException.class, () -> NumberUtils.add(left, right));
+
+    @Test
+    @Tag("Mutations")
+    void testLeadingZeroEdgeCase() {
+        List<Integer> left = Arrays.asList(0, 0, 0, 5);
+        List<Integer> right = Arrays.asList(0, 0, 0, 5);
+        List<Integer> result = NumberUtils.add(left, right);
+
+        assertFalse(result.get(0) == 0 && result.size() > 1, "Leading zeros should be removed.");
+        assertEquals(Arrays.asList(1, 0), result, "Leading zeros should be stripped, and result should be correct.");
     }
 
-    @Test /** Covers Number Over 9 on right side**/
-    @Tag("Coverage")
-    public void testRightOutOfBoundsPlusTen() {
-        List<Integer> left = Arrays.asList(9,6);
-        List<Integer> right = Arrays.asList(10);
-        assertThrows(IllegalArgumentException.class, () -> NumberUtils.add(left, right));
+    @Test
+    @Tag("Mutations")
+    void testLeadingZeroMutationFix() {
+        List<Integer> left = Arrays.asList(0, 0, 0, 0, 1);
+        List<Integer> right = Arrays.asList(0, 0, 0, 0, 2);
+        List<Integer> result = NumberUtils.add(left, right);
+
+        assertEquals(Arrays.asList(3), result, "Result should not contain leading zeros.");
+
+        List<Integer> leftZero = Arrays.asList(0, 0, 0);
+        List<Integer> rightZero = Arrays.asList(0, 0, 0);
+        List<Integer> zeroResult = NumberUtils.add(leftZero, rightZero);
+
+        assertEquals(Arrays.asList(0), zeroResult, "Edge case: sum of zeros should return [0] exactly.");
     }
 
 }
